@@ -228,7 +228,7 @@ function land(p){const f=frog;f.state='sit';f.pad=p;f.vx=f.vy=0;f.sx=1.45;f.sy=0
   if(off<0.22){game.combo++;const c=game.combo;if(c>save.stats.combo){save.stats.combo=c;saveIt();}checkUnlocks();pts+=c;game.comboPop=0.35;
     const cols=c>=5?['#ff5d7a','#ffd23f','#9bff8a','#6ee7ff','#c38bff']:c>=3?['#ff9f3f','#ffd23f','#fff3a0','#ff5d3a']:['#9bff8a','#ffffff','#d8ff8a'];
     addText(f.x,f.y-24,c>1?'PERFECT X'+c:'PERFECT!',cols[0],c>=3?2:1,c>=5);
-    sfx('perfect'+Math.min(c,8),Math.pow(2,(Math.min(c,8)-1)*1.5/12+Math.max(0,Math.min(c-8,6))*2/12));
+    sfx('perfect2',Math.pow(2,Math.min(c-1,12)*2/12));if(c>=5)sfx('perfect6',Math.pow(2,Math.min(c-5,8)*2/12),0.5);
     hit=Math.min(0.12,0.04+c*0.012);shake=Math.max(shake,Math.min(5,1.5+c*0.5));FX.zoom=Math.max(FX.zoom,Math.min(0.06,0.018+c*0.006));
     sparkle(f.x,f.y-4,10+c*4,false,cols);p.glow=0.5;p.glowCol=cols[1];
     shocks.push({x:f.x,y:f.y-4,r:3,life:0.45,col:cols[0],max:14+c*4});if(c>=3)shocks.push({x:f.x,y:f.y-4,r:1,life:0.35,col:cols[1],max:8+c*2});
