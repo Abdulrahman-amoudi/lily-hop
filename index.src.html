@@ -111,7 +111,7 @@ const SKINS=[
  {id:'royal',name:'ROYAL',g:'#ffcf3f',d:'#c08a10',h:'#fff0a0',b:'#fff8d8',o:'#5a3a00',record:true,req:'BEAT YOUR RECORD',crown:true}];
 let save={s:0,x:0,lv:1,skin:'classic',royal:false};
 try{const o=JSON.parse(localStorage.getItem('lilyhop2')||'null');if(o)save=Object.assign(save,o);else{const v1=JSON.parse(localStorage.getItem('lilyhop')||'null');if(v1){save.s=v1.s||0;save.x=v1.x||0;}}}catch(e){}
-save.set=Object.assign({sfx:8,bg:4,bgi:0,jump:0,fx:0,shake:1},save.set||{});
+save.set=Object.assign({sfx:8,bg:4,bgi:0,jump:0,fx:0,shake:1,vo:8},save.set||{});
 if(!save.pid){try{save.pid=crypto.randomUUID();}catch(e){save.pid='xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g,()=>(Math.random()*16|0).toString(16));}}
 save.stats=Object.assign({deaths:0,golds:0,beetles:0,combo:0},save.stats||{});
 function saveIt(){try{localStorage.setItem('lilyhop2',JSON.stringify(save));}catch(e){}}
@@ -181,13 +181,18 @@ const midH=wx=>WATER-5-(5+4*Math.sin(wx*0.021)+7*Math.abs(Math.sin(wx*0.11))+3*M
 const JUMPS=[['HOP','jump_hop'],['BOING','jump_boing'],['SWISH','jump_swish'],['SPRING','jump_spring']];
 const BGS=[['POND','bg_pond'],['CREEK','bg_creek'],['FOREST','bg_forest'],['WIND','bg_wind'],['OFF',null]];
 const GAIN={jump_hop:1,jump_boing:0.9,jump_swish:1,jump_spring:0.9,bg_pond:1,bg_creek:1,bg_forest:1,bg_wind:1,charge:0.7,click:0.7,croak:0.8,drag:1,fever:1,fly:1,glub:1,gold:1,land:1,level:1,lotus:1,nooo:1,perfect1:1,perfect2:1,perfect3:1,perfect4:1,perfect5:1,perfect6:1,perfect7:1,perfect8:1,record:1,splash:1.1,unlock:1,wobble:0.9};
-let AC=null,master=null,sfxBus=null,bgBus=null,bgSrc=null,muted=false,chargeSrc=null;const SND={};
+let AC=null,master=null,sfxBus=null,bgBus=null,voBus=null,voSrc=null,voT=0,bgSrc=null,muted=false,chargeSrc=null;const SND={};
 function ensureAudio(){
-  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();const lim=AC.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=12;lim.attack.value=0.002;lim.release.value=0.15;master.connect(lim);lim.connect(AC.destination);sfxBus=AC.createGain();sfxBus.connect(master);bgBus=AC.createGain();bgBus.connect(master);applyVol();
+  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();const lim=AC.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=12;lim.attack.value=0.002;lim.release.value=0.15;master.connect(lim);lim.connect(AC.destination);sfxBus=AC.createGain();sfxBus.connect(master);bgBus=AC.createGain();bgBus.connect(master);voBus=AC.createGain();voBus.connect(master);applyVol();
     for(const k in SFX_DATA){const bin=atob(SFX_DATA[k].split(',')[1]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
       AC.decodeAudioData(u.buffer,b=>{SND[k]=b;if(k===BGS[save.set.bgi][1])setBg();},()=>{});}}catch(e){AC=null;}}
   if(AC&&AC.state==='suspended')AC.resume();}
-function applyVol(){if(!AC)return;sfxBus.gain.value=save.set.sfx/10;bgBus.gain.value=save.set.bg/10;}
+function applyVol(){if(!AC)return;sfxBus.gain.value=save.set.sfx/10;bgBus.gain.value=save.set.bg/10;voBus.gain.value=save.set.vo/10;}
+// announcer voice: one line at a time; a higher-priority line cuts in, a lower one waits its turn
+let voPri=0;
+function voice(n,pri=1){if(!AC||!SND['vo_'+n]||save.set.vo<=0)return;const now=AC.currentTime;
+  if(voSrc&&now<voT&&pri<=voPri)return;if(voSrc){try{voSrc.stop();}catch(e){}}
+  const s=AC.createBufferSource();s.buffer=SND['vo_'+n];s.connect(voBus);s.start(now+0.05);voSrc=s;voPri=pri;voT=now+0.05+s.buffer.duration;}
 function setBg(){if(!AC)return;if(bgSrc){try{bgSrc.stop();}catch(e){}bgSrc=null;}const n=BGS[save.set.bgi][1];if(!n||!SND[n])return;const s=AC.createBufferSource();s.buffer=SND[n];s.loop=true;s.connect(bgBus);s.start();bgSrc=s;}
 function sfx(n,rate=1,vol=1){if(!AC||!SND[n])return null;const s=AC.createBufferSource();s.buffer=SND[n];s.playbackRate.value=rate;const g=AC.createGain();g.gain.value=(GAIN[n]||1)*vol;s.connect(g).connect(sfxBus);s.start();return s;}
 function setMute(m){muted=m;if(master)master.gain.value=m?0:1;}
@@ -243,6 +248,8 @@ function land(p){const f=frog;f.state='sit';f.pad=p;f.vx=f.vy=0;f.sx=1.45;f.sy=0
     sparkle(f.x,f.y-4,10+c*4,false,cols);p.glow=0.5;p.glowCol=cols[1];
     shocks.push({x:f.x,y:f.y-4,r:3,life:0.45,col:cols[0],max:14+c*4});if(c>=3)shocks.push({x:f.x,y:f.y-4,r:1,life:0.35,col:cols[1],max:8+c*2});
     for(let i=0;i<Math.min(c,8);i++)parts.push({x:f.x+rnd(-p.w/2,p.w/2),y:WATER-1,vx:0,vy:-rnd(40,90),g:60,life:rnd(0.4,0.7),col:pick(cols),s:1,fade:true});
+    const VO={2:'sweet',3:'onfire',4:'tasty',5:'unstoppable',6:'delicious',7:'ribbiting',8:'froggod'};
+    if(VO[c])voice(VO[c],c===3||c===5||c===8?3:2);else if(c>8)voice(['hoppy','delicious','ribbiting','tasty','sweet'][c%5],2);
     const MS={3:'ON FIRE!',5:'UNSTOPPABLE!',8:'FROG GOD!',12:'ARE YOU EVEN HUMAN?!'};
     if(MS[c]){banner(MS[c],'PERFECT STREAK X'+c+'  +'+c+' PER LANDING',c>=5);sfx('level');confetti(15+c*3);}}
   else{if(game.combo>=3){addText(f.x,f.y-34,'COMBO LOST','#8a7ab8');sfx('nooo',1.5,0.5);}game.combo=0;if(off>0.7){f.teeter=0.75;addText(f.x,f.y-24,pick(['WHOA!','OOP-','YIKES','CLOSE ONE']),'#ffd36b');sfx('wobble');}
@@ -251,15 +258,15 @@ function land(p){const f=frog;f.state='sit';f.pad=p;f.vx=f.vy=0;f.sx=1.45;f.sy=0
   addScore(pts);sfx('land',landRate);drops(f.x,WATER,6,0.5);rings.push({x:f.x,r:2,life:0.6});}
 function collect(it){it.taken=true;const k=it.kind;const g=addScore(ITEM[k].pts);
   if(k==='beetle'||k==='gold'){save.stats[k==='beetle'?'beetles':'golds']++;saveIt();checkUnlocks();}
-  if(k==='beetle'){game.fever=6;addText(it.x,it.y-8,'FEVER X2!',ITEM[k].col,2);sfx('fever');hit=0.08;shake=Math.max(shake,4);FX.flash=0.35;FX.ab=0.006;FX.zoom=0.04;
+  if(k==='beetle'){voice('delicious',3);game.fever=6;addText(it.x,it.y-8,'FEVER X2!',ITEM[k].col,2);sfx('fever');hit=0.08;shake=Math.max(shake,4);FX.flash=0.35;FX.ab=0.006;FX.zoom=0.04;
     sparkle(it.x,it.y,26,true,['#ff5d7a','#ffd23f','#9bff8a','#6ee7ff','#c38bff']);}
-  else if(k==='gold'){addText(it.x,it.y-8,'+'+g+' GOLD!',ITEM[k].col,2);sfx('gold');sparkle(it.x,it.y,20,true);hit=0.07;shake=Math.max(shake,3);FX.flash=Math.max(FX.flash,0.12);}
+  else if(k==='gold'){voice('juicy',2);addText(it.x,it.y-8,'+'+g+' GOLD!',ITEM[k].col,2);sfx('gold');sparkle(it.x,it.y,20,true);hit=0.07;shake=Math.max(shake,3);FX.flash=Math.max(FX.flash,0.12);}
   else if(k==='drag'){addText(it.x,it.y-8,'+'+g+' ZOOM!',ITEM[k].col);sfx('drag');sparkle(it.x,it.y,12,false,['#6ee7ff','#ffffff','#a0f0ff']);}
   else{addText(it.x,it.y-8,'+'+g,ITEM[k].col);sfx('fly',rnd(0.96,1.04));sparkle(it.x,it.y,8,false);}}
 function checkRecord(){if(game.recordHit||game.startBest<=0||game.score<=game.startBest||game.mode!=='play')return;
   game.recordHit=true;game.crown=true;game.fever=Math.max(game.fever,5);
   const first=!save.royal;if(first){save.royal=true;if(!save.seen.includes('royal'))save.seen.push('royal');saveIt();}
-  banner('NEW RECORD!',first?'REWARD: CROWN + ROYAL SKIN!':'REWARD: CROWN + FEVER X2',true);
+  voice('record',4);banner('NEW RECORD!',first?'REWARD: CROWN + ROYAL SKIN!':'REWARD: CROWN + FEVER X2',true);
   sfx('record');setTimeout(()=>sfx('unlock'),350);confetti(70);FX.flash=0.5;FX.ab=0.008;FX.zoom=0.05;shake=Math.max(shake,5);hit=0.1;}
 function die(){const f=frog;stopCharge();f.state='dead';game.mode='dying';game.overT=0;hit=0.14;shake=8;sfx('splash');FX.ab=0.007;FX.zoom=0.03;
   drops(f.x,WATER,40,1.4);rings.push({x:f.x,r:2,life:0.9},{x:f.x,r:0,life:1.2});f.vy=30;f.vx*=0.2;game.combo=0;game.fever=0;
@@ -304,6 +311,7 @@ let setOpen=false,setSel=0;
 const FXL=['ON','LOW','OFF'];
 const ROWS=[
  {l:'SFX VOLUME',v:()=>save.set.sfx*10+'%',c:d=>{save.set.sfx=clamp(save.set.sfx+d,0,10);applyVol();sfx('fly');}},
+ {l:'VOICE VOLUME',v:()=>save.set.vo*10+'%',c:d=>{save.set.vo=clamp(save.set.vo+d,0,10);applyVol();voice(pick(['sweet','tasty','juicy']),5);}},
  {l:'BG VOLUME',v:()=>save.set.bg*10+'%',c:d=>{save.set.bg=clamp(save.set.bg+d,0,10);applyVol();}},
  {l:'BG SOUND',v:()=>BGS[save.set.bgi][0],c:d=>{save.set.bgi=(save.set.bgi+d+BGS.length)%BGS.length;setBg();}},
  {l:'JUMP SOUND',v:()=>JUMPS[save.set.jump][0],c:d=>{save.set.jump=(save.set.jump+d+JUMPS.length)%JUMPS.length;sfx(JUMPS[save.set.jump][1]);}},
@@ -311,7 +319,7 @@ const ROWS=[
  {l:'SCREEN SHAKE',v:()=>save.set.shake?'ON':'OFF',c:()=>{save.set.shake=1-save.set.shake;if(save.set.shake)shake=3;}},
  {l:'NAME',v:()=>save.name||'---',c:()=>{closeSettings();openName();}},
  {l:'CLOSE',v:()=>'',c:()=>closeSettings()}];
-const PX=48,PY=18,PW=W-96,PH=146,RY=44,RH=12;
+const PX=48,PY=12,PW=W-96,PH=158,RY=37,RH=12;
 function openSettings(){ensureAudio();if(frog.state==='charge'){frog.state='sit';frog.charge=0;frog.maxHold=0;stopCharge();}setOpen=true;setSel=0;sfx('click');}
 function closeSettings(){setOpen=false;saveIt();sfx('click');}
 function changeRow(i,d){setSel=i;ROWS[i].c(d);saveIt();}
@@ -325,7 +333,7 @@ function settingsTap(p){if(p.x<PX||p.x>PX+PW||p.y<PY||p.y>PY+PH){closeSettings()
   const i=Math.floor((p.y-RY+3)/RH);if(i<0||i>=ROWS.length)return;changeRow(i,(p.x>=PX+PW-68&&p.x<PX+PW-46)?-1:1);}
 function drawSettings(){ctx.fillStyle='rgba(8,4,20,0.55)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='rgba(20,10,40,0.95)';ctx.fillRect(PX,PY,PW,PH);ctx.fillStyle='#9bff8a';ctx.fillRect(PX,PY,PW,1);ctx.fillRect(PX,PY+PH-1,PW,1);ctx.fillRect(PX,PY,1,PH);ctx.fillRect(PX+PW-1,PY,1,PH);
-  txt('SETTINGS',W/2,PY+9,2,'#9bff8a','c');
+  txt('SETTINGS',W/2,PY+7,2,'#9bff8a','c');
   ROWS.forEach((r,i)=>{const y=RY+i*RH,sel=i===setSel;
     if(sel){ctx.fillStyle='rgba(155,255,138,0.12)';ctx.fillRect(PX+4,y-3,PW-8,RH-2);}
     const col=sel?'#ffffff':'#c8b8ff';
@@ -400,12 +408,12 @@ function update(dt){const f=frog;
   f.ex=clamp(tx,-1,1);f.ey=clamp(ty,-1,1);
   if(f.state==='dead'){f.vy=lerp(f.vy,18,damp(0.1,dt));f.y+=f.vy*dt;f.x+=f.vx*dt;f.vx*=Math.pow(0.05,dt);}
   if(game.mode==='dying'){game.overT+=dt;
-    if(game.overT>0.75&&!game.glubbed){game.glubbed=true;sfx('glub');addText(f.x+8,WATER-14,'GLUB','#a9d8ff');}
-    if(game.overT>1.05){game.mode='over';if(game.score>0){if(save.name)submitScore();else if(!save.askedName){save.askedName=true;saveIt();openName();}}if(game.newBest){sfx('unlock');confetti(30);}}}
+    if(game.overT>0.75&&!game.glubbed){game.glubbed=true;sfx('glub');if(!game.newBest)voice('ohno',2);addText(f.x+8,WATER-14,'GLUB','#a9d8ff');}
+    if(game.overT>1.05){game.mode='over';if(game.score>0){if(save.name)submitScore();else if(!save.askedName){save.askedName=true;saveIt();openName();}}if(game.newBest){sfx('unlock');confetti(30);voice('record',4);}}}
   else if(game.mode==='over')game.overT+=dt;
   if(game.mode==='play'&&game.started){game.t+=dt;
     if(game.t>=game.level*10){game.level++;const L=game.level;sfx('level');shake=Math.max(shake,3);FX.zoom=Math.max(FX.zoom,0.03);
-      if(save.lv<L){save.lv=L;saveIt();}banner('LEVEL '+L,QUIPS[L]||'GOOD LUCK LOL');checkUnlocks();}}
+      voice('levelup',3);if(save.lv<L){save.lv=L;saveIt();}banner('LEVEL '+L,QUIPS[L]||'GOOD LUCK LOL');checkUnlocks();}}
   if(game.fever>0)game.fever=Math.max(0,game.fever-dt);
   if(f.state!=='dead')cam.x+=(f.x-90-cam.x)*damp(0.003,dt);
   game.maxX=Math.max(game.maxX,f.x);
