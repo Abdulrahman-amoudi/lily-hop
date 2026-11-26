@@ -152,10 +152,10 @@ const midH=wx=>WATER-5-(5+4*Math.sin(wx*0.021)+7*Math.abs(Math.sin(wx*0.11))+3*M
 /* ================= audio: recorded CC0 sound effects (no music) ================= */
 const JUMPS=[['HOP','jump_hop'],['BOING','jump_boing'],['SWISH','jump_swish'],['SPRING','jump_spring']];
 const BGS=[['POND','bg_pond'],['CREEK','bg_creek'],['FOREST','bg_forest'],['WIND','bg_wind'],['OFF',null]];
-const GAIN={jump_hop:0.7,jump_boing:0.6,jump_swish:0.7,jump_spring:0.6,bg_pond:1,bg_creek:1,bg_forest:1,bg_wind:1,charge:0.5,click:0.5,croak:0.6,drag:0.7,fever:0.8,fly:0.7,glub:0.8,gold:0.8,jump:0.7,land:0.8,level:0.8,lotus:0.7,nooo:0.7,perfect:0.7,record:0.9,splash:0.9,unlock:0.8,wobble:0.7};
+const GAIN={jump_hop:1,jump_boing:0.9,jump_swish:1,jump_spring:0.9,bg_pond:1,bg_creek:1,bg_forest:1,bg_wind:1,charge:0.7,click:0.7,croak:0.8,drag:1,fever:1,fly:1,glub:1,gold:1,land:1,level:1,lotus:1,nooo:1,perfect:1,record:1,splash:1.1,unlock:1,wobble:0.9};
 let AC=null,master=null,sfxBus=null,bgBus=null,bgSrc=null,muted=false,chargeSrc=null;const SND={};
 function ensureAudio(){
-  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);sfxBus=AC.createGain();sfxBus.connect(master);bgBus=AC.createGain();bgBus.connect(master);applyVol();
+  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();const lim=AC.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=12;lim.attack.value=0.002;lim.release.value=0.15;master.connect(lim);lim.connect(AC.destination);sfxBus=AC.createGain();sfxBus.connect(master);bgBus=AC.createGain();bgBus.connect(master);applyVol();
     for(const k in SFX_DATA){const bin=atob(SFX_DATA[k].split(',')[1]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
       AC.decodeAudioData(u.buffer,b=>{SND[k]=b;if(k===BGS[save.set.bgi][1])setBg();},()=>{});}}catch(e){AC=null;}}
   if(AC&&AC.state==='suspended')AC.resume();}
@@ -200,25 +200,25 @@ function banner(a,b,big=false){game.banner={t:2.6,a,b,big};}
 
 /* ================= actions ================= */
 function jump(){const f=frog,c=f.charge;stopCharge();f.vx=42+c*125;f.vy=-(85+c*115);f.state='air';f.sx=0.7;f.sy=1.35;
-  const p=f.pad;f.pad=null;p.dip=2;drops(f.x,WATER,5,0.6);sfx(JUMPS[save.set.jump][1],0.92+c*0.25);
+  const p=f.pad;f.pad=null;p.dip=2;drops(f.x,WATER,5,0.6);sfx(JUMPS[save.set.jump][1],0.96+c*0.1);
   if(!game.started){game.started=true;p.timer=diff().sink;}
   f.charge=0;f.maxHold=0;f.sweat=false;}
 function land(p){const f=frog;f.state='sit';f.pad=p;f.vx=f.vy=0;f.sx=1.45;f.sy=0.62;f.rot=0;p.dip=2.5;f.idle=0;
   const first=p.timer===null;if(first)p.timer=diff().sink+(p.lotus?1.2:0);
   const off=Math.abs(f.x-p.cx)/(p.w/2);let pts=1;
   for(let i=0;i<6;i++)parts.push({x:f.x+rnd(-5,5),y:f.y-1,vx:rnd(-40,40),vy:rnd(-50,-15),g:200,life:rnd(0.25,0.5),col:pick([skin().h,'#7ad66b','#c8ffb0']),s:1});
-  if(off<0.22){game.combo++;pts+=game.combo;addText(f.x,f.y-24,game.combo>1?'PERFECT X'+game.combo:'PERFECT!','#9bff8a');const pr=Math.pow(2,Math.min(game.combo-1,8)*2/12);sfx('perfect',pr);sfx('fly',pr*0.8,0.6);
+  if(off<0.22){game.combo++;pts+=game.combo;addText(f.x,f.y-24,game.combo>1?'PERFECT X'+game.combo:'PERFECT!','#9bff8a');sfx('perfect',Math.pow(2,Math.min(game.combo-1,8)/12));
     hit=0.05;shake=Math.max(shake,2);FX.zoom=Math.max(FX.zoom,0.025);sparkle(f.x,f.y-4,10,false);if(game.combo===3)addText(f.x,f.y-34,'ON FIRE!','#ff9f3f',2);}
   else{game.combo=0;if(off>0.7){f.teeter=0.75;addText(f.x,f.y-24,pick(['WHOA!','OOP-','YIKES','CLOSE ONE']),'#ffd36b');sfx('wobble');}
     else if(Math.random()<0.25)addText(f.x,f.y-24,pick(['BOING','NICE','HOP!','SPLOT']),'#ffffff');}
   if(first&&p.lotus){p.lotus=false;const g=addScore(5);addText(f.x,f.y-34,'LOTUS +'+g,'#ffb3e6');sfx('lotus');sparkle(f.x,f.y-3,14,false,['#ff8fc0','#ffd6ec','#ffffff']);}
-  addScore(pts);sfx('land',rnd(0.92,1.08));drops(f.x,WATER,6,0.5);rings.push({x:f.x,r:2,life:0.6});}
+  addScore(pts);sfx('land',rnd(0.97,1.03));drops(f.x,WATER,6,0.5);rings.push({x:f.x,r:2,life:0.6});}
 function collect(it){it.taken=true;const k=it.kind;const g=addScore(ITEM[k].pts);
   if(k==='beetle'){game.fever=6;addText(it.x,it.y-8,'FEVER X2!',ITEM[k].col,2);sfx('fever');hit=0.08;shake=Math.max(shake,4);FX.flash=0.35;FX.ab=0.006;FX.zoom=0.04;
     sparkle(it.x,it.y,26,true,['#ff5d7a','#ffd23f','#9bff8a','#6ee7ff','#c38bff']);}
   else if(k==='gold'){addText(it.x,it.y-8,'+'+g+' GOLD!',ITEM[k].col,2);sfx('gold');sparkle(it.x,it.y,20,true);hit=0.07;shake=Math.max(shake,3);FX.flash=Math.max(FX.flash,0.12);}
   else if(k==='drag'){addText(it.x,it.y-8,'+'+g+' ZOOM!',ITEM[k].col);sfx('drag');sparkle(it.x,it.y,12,false,['#6ee7ff','#ffffff','#a0f0ff']);}
-  else{addText(it.x,it.y-8,'+'+g,ITEM[k].col);sfx('fly',rnd(0.9,1.15));sparkle(it.x,it.y,8,false);}}
+  else{addText(it.x,it.y-8,'+'+g,ITEM[k].col);sfx('fly',rnd(0.96,1.04));sparkle(it.x,it.y,8,false);}}
 function checkRecord(){if(game.recordHit||game.startBest<=0||game.score<=game.startBest||game.mode!=='play')return;
   game.recordHit=true;game.crown=true;game.fever=Math.max(game.fever,5);
   const first=!save.royal;if(first){save.royal=true;saveIt();}
@@ -302,7 +302,7 @@ function update(dt){const f=frog;
     if(f.charge>=1){f.maxHold+=dt;if(f.maxHold>0.7&&!f.sweat){f.sweat=true;addText(f.x,f.y-26,'!!','#ff7a7a');}
       if(Math.random()<dt*5)parts.push({x:f.x+5,y:f.y-14,vx:rnd(10,35),vy:-45,g:220,life:0.6,col:'#8fd3ff',s:1});}}
   else{f.sx=lerp(f.sx,1,k);f.sy=lerp(f.sy,1,k);}
-  if(f.state==='sit'){f.idle+=dt;if(f.idle>2.4){f.idle=-1.5;f.throatT=0.6;sfx('croak',rnd(0.85,1.1));if(game.mode==='play')addText(f.x,f.y-24,pick(['RIBBIT','CROAK','...HOP?','BRRRP']),'#c8ffb0');}}
+  if(f.state==='sit'){f.idle+=dt;if(f.idle>2.4){f.idle=-1.5;f.throatT=0.6;sfx('croak',rnd(0.95,1.05));if(game.mode==='play')addText(f.x,f.y-24,pick(['RIBBIT','CROAK','...HOP?','BRRRP']),'#c8ffb0');}}
   if(f.throatT>0){f.throatT-=dt;f.throat=Math.abs(Math.sin((0.6-f.throatT)*Math.PI*5));}else f.throat=0;
   if(f.teeter>0)f.teeter=Math.max(0,f.teeter-dt);
   f.blinkT-=dt;if(f.blinkT<0){f.blink=0.12;f.blinkT=rnd(1.5,4);}if(f.blink>0)f.blink-=dt;
