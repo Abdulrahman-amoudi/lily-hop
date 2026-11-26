@@ -111,7 +111,7 @@ const SKINS=[
  {id:'royal',name:'ROYAL',g:'#ffcf3f',d:'#c08a10',h:'#fff0a0',b:'#fff8d8',o:'#5a3a00',record:true,req:'BEAT YOUR RECORD',crown:true}];
 let save={s:0,x:0,lv:1,skin:'classic',royal:false};
 try{const o=JSON.parse(localStorage.getItem('lilyhop2')||'null');if(o)save=Object.assign(save,o);else{const v1=JSON.parse(localStorage.getItem('lilyhop')||'null');if(v1){save.s=v1.s||0;save.x=v1.x||0;}}}catch(e){}
-save.set=Object.assign({sfx:8,bg:4,bgi:0,jump:0,fx:0,shake:1,vo:8},save.set||{});
+save.set=Object.assign({sfx:1,bg:1,bgi:4,jump:2,fx:0,shake:1,vo:1},save.set||{});
 if(!save.pid){try{save.pid=crypto.randomUUID();}catch(e){save.pid='xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g,()=>(Math.random()*16|0).toString(16));}}
 save.stats=Object.assign({deaths:0,golds:0,beetles:0,combo:0},save.stats||{});
 function saveIt(){try{localStorage.setItem('lilyhop2',JSON.stringify(save));}catch(e){}}
