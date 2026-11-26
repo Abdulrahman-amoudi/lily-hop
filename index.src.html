@@ -33,16 +33,16 @@ function initGL(){try{gl=cv.getContext('webgl',{antialias:false,alpha:false,prem
   const fsrc=`precision mediump float;varying vec2 v;uniform sampler2D tex,ui;uniform float time,ab,flash,zoom,wl,fever;
   vec3 S(vec2 u){return texture2D(tex,u).rgb;}
   void main(){vec2 uv=(v-0.5)/zoom+0.5;
-    if(uv.y>wl){float d=clamp((uv.y-wl)*25.0,0.0,1.0);uv.x+=sin(uv.y*260.0+time*2.5)*0.0018*d;uv.y+=sin(uv.x*90.0+time*1.7)*0.0009*d;}
+    if(uv.y>wl){float d=clamp((uv.y-wl)*25.0,0.0,1.0);uv.x+=sin(uv.y*260.0+time*2.5)*0.0009*d;}
     vec3 c=vec3(S(uv+vec2(ab,0.0)).r,S(uv).g,S(uv-vec2(ab,0.0)).b);
     vec2 px=vec2(1.0/320.0,1.0/180.0);vec3 b=vec3(0.0);
-    for(int i=0;i<8;i++){float a=float(i)*0.785398;vec2 o=vec2(cos(a),sin(a));b+=max(S(uv+o*px*2.0)-0.55,0.0);b+=max(S(uv+o*px*4.5)-0.55,0.0)*0.6;}
-    c+=b*0.24;
-    float l=dot(c,vec3(0.299,0.587,0.114));c=mix(vec3(l),c,1.12+fever*0.4);
-    float sl=0.9+0.1*abs(sin(v.y*180.0*3.14159));c*=mix(1.0,sl,0.5);
+    for(int i=0;i<8;i++){float a=float(i)*0.785398;vec2 o=vec2(cos(a),sin(a));b+=max(S(uv+o*px*2.0)-0.75,0.0);b+=max(S(uv+o*px*4.5)-0.75,0.0)*0.4;}
+    c+=b*0.07;
+    float l=dot(c,vec3(0.299,0.587,0.114));c=mix(vec3(l),c,1.0+fever*0.12);
+    float sl=0.9+0.1*abs(sin(v.y*180.0*3.14159));c*=mix(1.0,sl,0.15);
     c=mix(c,vec3(1.0,0.97,0.88),flash);
     vec4 u=texture2D(ui,v);vec3 ub=vec3(0.0);for(int i=0;i<4;i++){float a=float(i)*1.5708+0.785;ub+=texture2D(ui,v+vec2(cos(a),sin(a))*px*1.5).rgb*texture2D(ui,v+vec2(cos(a),sin(a))*px*1.5).a;}
-    c=mix(c,u.rgb,u.a)+max(ub*0.25-0.12,0.0)*0.6;
+    c=mix(c,u.rgb,u.a);
     gl_FragColor=vec4(c,1.0);}`;
   const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o;};
   try{glp=gl.createProgram();gl.attachShader(glp,sh(gl.VERTEX_SHADER,vs));gl.attachShader(glp,sh(gl.FRAGMENT_SHADER,fsrc));gl.linkProgram(glp);
@@ -65,9 +65,9 @@ const FX={zoom:0,ab:0,flash:0};
 function present(){
   if(gl){gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,gui);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,uiC);
     gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,gtex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);
-    gl.uniform1f(U.time,T);gl.uniform1f(U.ab,FX.ab);gl.uniform1f(U.flash,FX.flash);gl.uniform1f(U.zoom,1+FX.zoom);gl.uniform1f(U.fever,game.fever>0?1:0);
+    gl.uniform1f(U.time,T);gl.uniform1f(U.ab,Math.min(FX.ab,0.0025));gl.uniform1f(U.flash,0);gl.uniform1f(U.zoom,1+FX.zoom);gl.uniform1f(U.fever,game.fever>0?1:0);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);}
-  else{dctx.imageSmoothingEnabled=false;dctx.drawImage(src,0,0,cv.width,cv.height);dctx.drawImage(uiC,0,0,cv.width,cv.height);if(FX.flash>0.01){dctx.fillStyle='rgba(255,248,224,'+FX.flash+')';dctx.fillRect(0,0,cv.width,cv.height);}}}
+  else{dctx.imageSmoothingEnabled=false;dctx.drawImage(src,0,0,cv.width,cv.height);dctx.drawImage(uiC,0,0,cv.width,cv.height);}}
 
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -149,12 +149,12 @@ const farH=wx=>WATER-22-10*Math.sin(wx*0.013)-6*Math.sin(wx*0.031+1.3)-3*Math.si
 const midH=wx=>WATER-5-(5+4*Math.sin(wx*0.021)+7*Math.abs(Math.sin(wx*0.11))+3*Math.abs(Math.sin(wx*0.37)));
 
 /* ================= audio: recorded CC0 sound effects (no music) ================= */
-const GAIN={ambient:0.3,charge:1.5,click:1,croak:0.5,drag:1.6,fever:1.4,fly:1.2,glub:1.8,gold:1.4,jump:0.5,land:0.9,level:1.4,lotus:0.9,nooo:1.8,perfect:0.8,record:0.8,splash:1.6,unlock:1.5,wobble:1.5};
+const GAIN={charge:0.5,click:0.5,croak:0.6,drag:0.7,fever:0.8,fly:0.7,glub:0.8,gold:0.8,jump:0.7,land:0.8,level:0.8,lotus:0.7,nooo:0.7,perfect:0.7,record:0.9,splash:0.9,unlock:0.8,wobble:0.7};
 let AC=null,master=null,muted=false,chargeSrc=null,ambStarted=false;const SND={};
 function ensureAudio(){
   if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);
     for(const k in SFX_DATA){const bin=atob(SFX_DATA[k].split(',')[1]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-      AC.decodeAudioData(u.buffer,b=>{SND[k]=b;if(k==='ambient')startAmbient();},()=>{});}}catch(e){AC=null;}}
+      AC.decodeAudioData(u.buffer,b=>{SND[k]=b;},()=>{});}}catch(e){AC=null;}}
   if(AC&&AC.state==='suspended')AC.resume();}
 function startAmbient(){if(ambStarted||!SND.ambient)return;ambStarted=true;const s=AC.createBufferSource();s.buffer=SND.ambient;s.loop=true;const g=AC.createGain();g.gain.value=GAIN.ambient;s.connect(g).connect(master);s.start();}
 function sfx(n,rate=1,vol=1){if(!AC||!SND[n])return null;const s=AC.createBufferSource();s.buffer=SND[n];s.playbackRate.value=rate;const g=AC.createGain();g.gain.value=(GAIN[n]||1)*vol;s.connect(g).connect(master);s.start();return s;}
@@ -318,7 +318,7 @@ function drawSun(){const cx=SUNX,cy=Math.round(94+nightV*60),r=16;
   ctx.globalAlpha=0.06;disc(cx,cy,r+16,'#ffb36b',WATER);ctx.globalAlpha=0.1;disc(cx,cy,r+9,'#ffb36b',WATER);ctx.globalAlpha=0.18;disc(cx,cy,r+4,'#ffc27a',WATER);ctx.globalAlpha=1;
   disc(cx,cy,r,'#ffcf73',WATER);disc(cx,cy-3,r-5,'#fff0b0',WATER);
   [[5,1],[9,1],[12,2],[15,2]].forEach(([o,h])=>{const y=cy+o;if(y<WATER)ctx.drawImage(skyC,cx-r-1,y,2*r+2,Math.min(h,WATER-y),cx-r-1,y,2*r+2,Math.min(h,WATER-y));});
-  ctx.globalAlpha=0.05*(1-nightV);ctx.fillStyle='#ffe0a0';
+  ctx.globalAlpha=0.025*(1-nightV);ctx.fillStyle='#ffe0a0';
   for(let i=0;i<5;i++){const a=-2.6+i*0.28+Math.sin(T*0.3+i)*0.03;ctx.save();ctx.translate(cx,cy);ctx.rotate(a);ctx.fillRect(0,-1.5,200,3+i%2*2);ctx.restore();}
   ctx.globalAlpha=1;}
 function drawCloud(c){const span=W+100,x=Math.round(((c.x-cam.x*0.06-T*2.5)%span+span)%span-50),y=c.y;
@@ -418,7 +418,7 @@ function render(){
     const vx=42+c*125,vy=-(85+c*115);ctx.fillStyle='#fff';for(let i=1;i<=7;i++){const t=i*0.045;ctx.globalAlpha=1-i/8;ctx.fillRect(Math.round(f.x+vx*t-cam.x),Math.round(f.y-6+vy*t+0.5*G*t*t),1,1);}ctx.globalAlpha=1;}
   ctx.restore();
   ctx.drawImage(vig,0,0);
-  if(game.fever>0){const a=0.45+0.25*Math.sin(T*12);ctx.globalAlpha=Math.min(1,game.fever)*a;for(let i=0;i<W;i+=4){ctx.fillStyle=hue(i*2);ctx.fillRect(i,0,4,2);ctx.fillRect(i,H-2,4,2);}
+  if(game.fever>0){const a=0.25+0.1*Math.sin(T*6);ctx.globalAlpha=Math.min(1,game.fever)*a;for(let i=0;i<W;i+=4){ctx.fillStyle=hue(i*2);ctx.fillRect(i,0,4,2);ctx.fillRect(i,H-2,4,2);}
     for(let j=0;j<H;j+=4){ctx.fillStyle=hue(j*2+90);ctx.fillRect(0,j,2,4);ctx.fillRect(W-2,j,2,4);}ctx.globalAlpha=1;}
   ui();}
 function skinPicker(y){const s=skin(),n=SKINS.filter(unlocked).length;

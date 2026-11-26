@@ -14,7 +14,7 @@ A juicy pixel-art frog-hopping game. Hold to charge, release to hop, catch bugs 
 - Fireflies (+3), dragonflies (+5), gold fireflies (+10), rainbow beetles (+25 and FEVER x2), lotus pads (+5)
 - Perfect-landing combos, a "NEW RECORD!" reward (crown + fever + Royal skin)
 - 6 skins unlocked by level: Classic, Poison Dart, Tomato, Ninja, Ghost, Royal
-- WebGL post-processing: bloom, water refraction, chromatic hits, scanlines
+- Subtle WebGL post-processing: soft glow, water ripple, reflections
 - Real recorded CC0 sound effects, no music
 
 ## Files
