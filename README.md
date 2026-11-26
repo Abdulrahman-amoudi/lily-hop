@@ -7,6 +7,7 @@ A juicy pixel-art frog-hopping game. Hold to charge, release to hop, catch bugs 
 ## Controls
 - **Hold Space / tap**: charge. **Release**: hop.
 - **← / →** (or tap the arrows): change skin on the menu.
+- **Esc / tap SETTINGS**: settings (volumes, background sound, jump sound, effects, screen shake).
 - **M**: mute.
 
 ## Features
@@ -15,7 +16,8 @@ A juicy pixel-art frog-hopping game. Hold to charge, release to hop, catch bugs 
 - Perfect-landing combos, a "NEW RECORD!" reward (crown + fever + Royal skin)
 - 6 skins unlocked by level: Classic, Poison Dart, Tomato, Ninja, Ghost, Royal
 - Subtle WebGL post-processing: soft glow, water ripple, reflections
-- Real recorded CC0 sound effects, no music
+- Real recorded CC0 sound effects and nature background loops, no music
+- Rising pitch on chained perfect landings
 
 ## Files
 - `index.html`: the playable game (single file, sounds embedded)
