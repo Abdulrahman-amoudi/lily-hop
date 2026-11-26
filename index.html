@@ -223,12 +223,12 @@ function jump(){const f=frog,c=f.charge;stopCharge();f.vx=42+c*125;f.vy=-(85+c*1
   f.charge=0;f.maxHold=0;f.sweat=false;}
 function land(p){const f=frog;f.state='sit';f.pad=p;f.vx=f.vy=0;f.sx=1.45;f.sy=0.62;f.rot=0;p.dip=2.5;f.idle=0;
   const first=p.timer===null;if(first)p.timer=diff().sink+(p.lotus?1.2:0);
-  const off=Math.abs(f.x-p.cx)/(p.w/2);let pts=1;
+  const off=Math.abs(f.x-p.cx)/(p.w/2);let pts=1,landRate=1;
   for(let i=0;i<6;i++)parts.push({x:f.x+rnd(-5,5),y:f.y-1,vx:rnd(-40,40),vy:rnd(-50,-15),g:200,life:rnd(0.25,0.5),col:pick([skin().h,'#7ad66b','#c8ffb0']),s:1});
   if(off<0.22){game.combo++;const c=game.combo;if(c>save.stats.combo){save.stats.combo=c;saveIt();}checkUnlocks();pts+=c;game.comboPop=0.35;
     const cols=c>=5?['#ff5d7a','#ffd23f','#9bff8a','#6ee7ff','#c38bff']:c>=3?['#ff9f3f','#ffd23f','#fff3a0','#ff5d3a']:['#9bff8a','#ffffff','#d8ff8a'];
     addText(f.x,f.y-24,c>1?'PERFECT X'+c:'PERFECT!',cols[0],c>=3?2:1,c>=5);
-    sfx('perfect2',Math.pow(2,Math.min(c-1,12)*2/12));if(c>=5)sfx('perfect6',Math.pow(2,Math.min(c-5,8)*2/12),0.5);
+    landRate=Math.pow(2,Math.min(c,12)*2/12);sfx('perfect2',landRate,0.35);if(c>=5)sfx('perfect6',Math.pow(2,Math.min(c-5,8)*2/12),0.4);
     hit=Math.min(0.12,0.04+c*0.012);shake=Math.max(shake,Math.min(5,1.5+c*0.5));FX.zoom=Math.max(FX.zoom,Math.min(0.06,0.018+c*0.006));
     sparkle(f.x,f.y-4,10+c*4,false,cols);p.glow=0.5;p.glowCol=cols[1];
     shocks.push({x:f.x,y:f.y-4,r:3,life:0.45,col:cols[0],max:14+c*4});if(c>=3)shocks.push({x:f.x,y:f.y-4,r:1,life:0.35,col:cols[1],max:8+c*2});
@@ -238,7 +238,7 @@ function land(p){const f=frog;f.state='sit';f.pad=p;f.vx=f.vy=0;f.sx=1.45;f.sy=0
   else{if(game.combo>=3){addText(f.x,f.y-34,'COMBO LOST','#8a7ab8');sfx('nooo',1.5,0.5);}game.combo=0;if(off>0.7){f.teeter=0.75;addText(f.x,f.y-24,pick(['WHOA!','OOP-','YIKES','CLOSE ONE']),'#ffd36b');sfx('wobble');}
     else if(Math.random()<0.25)addText(f.x,f.y-24,pick(['BOING','NICE','HOP!','SPLOT']),'#ffffff');}
   if(first&&p.lotus){p.lotus=false;const g=addScore(5);addText(f.x,f.y-34,'LOTUS +'+g,'#ffb3e6');sfx('lotus');sparkle(f.x,f.y-3,14,false,['#ff8fc0','#ffd6ec','#ffffff']);}
-  addScore(pts);sfx('land',rnd(0.97,1.03));drops(f.x,WATER,6,0.5);rings.push({x:f.x,r:2,life:0.6});}
+  addScore(pts);sfx('land',landRate);drops(f.x,WATER,6,0.5);rings.push({x:f.x,r:2,life:0.6});}
 function collect(it){it.taken=true;const k=it.kind;const g=addScore(ITEM[k].pts);
   if(k==='beetle'||k==='gold'){save.stats[k==='beetle'?'beetles':'golds']++;saveIt();checkUnlocks();}
   if(k==='beetle'){game.fever=6;addText(it.x,it.y-8,'FEVER X2!',ITEM[k].col,2);sfx('fever');hit=0.08;shake=Math.max(shake,4);FX.flash=0.35;FX.ab=0.006;FX.zoom=0.04;
