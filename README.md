@@ -2,7 +2,7 @@
 
 A juicy pixel-art frog-hopping game. Hold to charge, release to hop, catch bugs and don't sink.
 
-**Play:** https://abdulrahman-amoudi.github.io/lily-hop/
+**Play:** https://lily-hop-two.vercel.app
 
 ## Controls
 - **Hold Space / tap**: charge. **Release**: hop.
