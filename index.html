@@ -4,9 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Lily Hop</title>
+<meta name="description" content="Hold to charge, release to hop. Catch bugs, don't sink, beat your record.">
+<meta name="theme-color" content="#24123f">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Lily Hop">
+<meta property="og:title" content="Lily Hop"><meta property="og:description" content="A juicy pixel-art frog hopping game. Can you beat my score?"><meta property="og:image" content="https://lily-hop-two.vercel.app/icons/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-html,body{margin:0;height:100%;background:#0d0717;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overscroll-behavior:none;background:#0d0717;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 #nm{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(8,4,20,.6);font-family:'Press Start 2P',monospace;z-index:5}
@@ -319,6 +327,14 @@ function drawBoard(){ctx.fillStyle='rgba(8,4,20,0.55)';ctx.fillRect(0,0,W,H);
   txt(save.name?'YOU: '+save.name+'  BEST '+save.s:'SET YOUR NAME IN SETTINGS',W/2,y+h-20,1,'#9bff8a','c');
   txt('TAP / ESC TO CLOSE',W/2,y+h-10,1,'#8a7ab8','c');}
 
+/* ================= install as app (PWA) ================= */
+let installEvt=null;const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;});
+addEventListener('appinstalled',()=>{installEvt=null;});
+try{if('serviceWorker' in navigator&&location.protocol==='https:'&&window.top===window.self)navigator.serviceWorker.register('/sw.js').catch(()=>{});}catch(e){}
+function installApp(){if(standalone())return;if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;});}else{game.banner={t:4.5,a:'INSTALL',b:isIOS?'SAFARI: SHARE BUTTON > ADD TO HOME SCREEN':'BROWSER MENU > INSTALL APP / ADD TO HOME SCREEN',big:false};}}
+
 /* ================= settings ================= */
 let setOpen=false,setSel=0;
 const FXL=['ON','LOW','OFF'];
@@ -331,9 +347,10 @@ const ROWS=[
  {l:'EFFECTS',v:()=>FXL[save.set.fx],c:d=>{save.set.fx=(save.set.fx+d+3)%3;}},
  {l:'SCREEN SHAKE',v:()=>save.set.shake?'ON':'OFF',c:()=>{save.set.shake=1-save.set.shake;if(save.set.shake)shake=3;}},
  {l:'NAME',v:()=>save.name||'---',c:()=>{closeSettings();openName();}},
+ {l:'INSTALL APP',v:()=>standalone()?'DONE':'TAP',c:()=>{closeSettings();installApp();}},
  {l:'CLOSE',v:()=>'',c:()=>closeSettings()}];
-let PX=48,PY=12,PW=224,PH=158,RY=37,RH=12;
-function setPanel(){PW=Math.min(224,W-12);PX=Math.round((W-PW)/2);PY=Math.round(Math.max(12,(H-PH)/2));RY=PY+25;}
+let PX=48,PY=8,PW=224,PH=168,RY=33,RH=12;
+function setPanel(){PW=Math.min(224,W-12);PX=Math.round((W-PW)/2);PY=Math.round(Math.max(6,(H-PH)/2));RY=PY+25;}
 function openSettings(){ensureAudio();if(frog.state==='charge'){frog.state='sit';frog.charge=0;frog.maxHold=0;stopCharge();}setOpen=true;setSel=0;sfx('click');}
 function closeSettings(){setOpen=false;saveIt();sfx('click');}
 function changeRow(i,d){setSel=i;ROWS[i].c(d);saveIt();}

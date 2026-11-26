@@ -9,6 +9,7 @@ A juicy pixel-art frog-hopping game. Hold to charge, release to hop, catch bugs 
 - **← / →** (or tap the arrows): change skin on the menu.
 - **Esc / tap SETTINGS**: settings (volumes, background sound, jump sound, effects, screen shake).
 - **M**: mute.
+- **Install on your phone**: open the link, then Settings → INSTALL APP (Android/Chrome), or Safari → Share → Add to Home Screen (iPhone).
 
 ## Features
 - Lily pads that sink after you land, and get faster and start moving as levels go up
