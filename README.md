@@ -14,7 +14,7 @@ A juicy pixel-art frog-hopping game. Hold to charge, release to hop, catch bugs 
 - Lily pads that sink after you land, and get faster and start moving as levels go up
 - Fireflies (+3), dragonflies (+5), gold fireflies (+10), rainbow beetles (+25 and FEVER x2), lotus pads (+5)
 - Perfect-landing combos, a "NEW RECORD!" reward (crown + fever + Royal skin)
-- 6 skins unlocked by level: Classic, Poison Dart, Tomato, Ninja, Ghost, Royal
+- 14 skins: Classic, Glass Frog, Poison Dart, Bullfrog, Tomato, Ninja, Ghost, Cosmic (by level), plus Cool Frog, Pirate, Party Frog, Zombie, Rainbow and Royal (by achievements)
 - Subtle WebGL post-processing: soft glow, water ripple, reflections
 - Real recorded CC0 sound effects and nature background loops, no music
 - Rising pitch on chained perfect landings
